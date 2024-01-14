@@ -1,0 +1,16 @@
+{
+    "domain": "fmi-sealevel",
+    "version": "0.5.0",
+    "name": "FMI Sea Level",
+    "documentation": "https://github.com/lindhoscaa",
+    "requirements": [
+      "fmi-weather-client==0.1.2",
+      "geopy>=2.1.0"
+    ],
+    "dependencies": [],
+    "codeowners": [
+      "@lindhoscaa"
+    ],
+    "config_flow": true,
+    "iot_class": "cloud_polling"
+  }
