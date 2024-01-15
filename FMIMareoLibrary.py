@@ -14,8 +14,8 @@ BASE_URL = "http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeat
 FORECAST_TIME_STEP = 5
 OBSERVATION_TIME_STEP = 5
 
-OBSERVATION_LENGTH_HOURS = 72
-FORECAST_LENGTH_HOURS = 72
+OBSERVATION_LENGTH_HOURS = 2
+FORECAST_LENGTH_HOURS = 2
 
 OBSERVATION_OVERLAP_HOURS = 1
 FORECAST_OVERLAP_HOURS = 1
@@ -74,7 +74,7 @@ def get_forecast(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, forecas
 
 def get_observation(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, apiTimeout: int = API_TIMEOUT_IN_SECS, observationTimeStep: int = OBSERVATION_TIME_STEP, observationLengthHours: int = OBSERVATION_LENGTH_HOURS, observationOverlapHours: int = OBSERVATION_OVERLAP_HOURS):
     timeNow = datetime.datetime.utcnow()
-    endTime = timeNow - datetime.timedelta(hours=observationOverlapHours)
+    endTime = timeNow + datetime.timedelta(hours=observationOverlapHours)
     startTime = timeNow - datetime.timedelta(hours=observationLengthHours)
     startTimeString = startTime.isoformat(timespec="seconds") + "Z"
     endTimeString = endTime.isoformat(timespec="seconds") + "Z"
