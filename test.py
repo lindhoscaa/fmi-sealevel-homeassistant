@@ -1,7 +1,7 @@
 from FMIMareoLibrary import get_sea_level_data
 import matplotlib.pyplot as plt
 
-seaLevelData = get_sea_level_data(134253)
+seaLevelData = get_sea_level_data(fmisid=134253, observationLengthHours=2, forecastLengthHours=2, timeZone="AUTO")
 
 print(f"Current MW: {seaLevelData['CurrentMW']}, Current N2000: {seaLevelData['CurrentN2000']}")
 print("ObservationsMW:")

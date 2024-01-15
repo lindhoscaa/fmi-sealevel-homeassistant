@@ -3,6 +3,7 @@ from io import StringIO
 from xml.etree import ElementTree as ET
 import requests
 import math
+from dateutil import tz
 
 OBSERVATION_QUERY_ID = "fmi::observations::mareograph::instant::simple"
 FORECAST_QUERY_ID = "fmi::forecast::sealevel::point::simple"
@@ -14,8 +15,8 @@ BASE_URL = "http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeat
 FORECAST_TIME_STEP = 5
 OBSERVATION_TIME_STEP = 5
 
-OBSERVATION_LENGTH_HOURS = 2
-FORECAST_LENGTH_HOURS = 2
+OBSERVATION_LENGTH_HOURS = 72
+FORECAST_LENGTH_HOURS = 72
 
 OBSERVATION_OVERLAP_HOURS = 1
 FORECAST_OVERLAP_HOURS = 1
@@ -24,7 +25,14 @@ DEFAULT_UNIT = "cm"
 
 DEFAULT_FMISID = 134253
 
-def get_forecast(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, forecastOverlapHours: int = FORECAST_OVERLAP_HOURS, apiTimeout: int = API_TIMEOUT_IN_SECS, forecastTimeStep: int = FORECAST_TIME_STEP, forecastLengthHours: int = FORECAST_LENGTH_HOURS,):
+def get_forecast(fmisid: int = DEFAULT_FMISID,
+                 unit: str = DEFAULT_UNIT,
+                 forecastOverlapHours: int = FORECAST_OVERLAP_HOURS,
+                 apiTimeout: int = API_TIMEOUT_IN_SECS,
+                 forecastTimeStep: int = FORECAST_TIME_STEP,
+                 forecastLengthHours: int = FORECAST_LENGTH_HOURS,
+                 timeZone: str = "UTC"):
+    
     timeNow = datetime.datetime.utcnow()
     startTime = timeNow - datetime.timedelta(hours=forecastOverlapHours)
     endTime = timeNow + datetime.timedelta(hours=forecastLengthHours)
@@ -55,6 +63,17 @@ def get_forecast(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, forecas
 
     for i in rawSeaLevelForecastMW:
         time = datetime.datetime.strptime(i[0], "%Y-%m-%dT%H:%M:%SZ")
+        if timeZone != "UTC":
+            if timeZone == "AUTO":
+                timeZoneToConvertTo = tz.tzlocal()
+            else:
+                try:
+                    timeZoneToConvertTo = tz.gettz(timeZone)
+                except:
+                    pass
+            time = time.replace(tzinfo=tz.tzutc())
+            time = time.astimezone(timeZoneToConvertTo)
+
         value = float(i[1])
         if not math.isnan(value):
             if unit == "mm":
@@ -63,6 +82,16 @@ def get_forecast(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, forecas
 
     for i in rawSeaLevelForecastN2000:
         time = datetime.datetime.strptime(i[0], "%Y-%m-%dT%H:%M:%SZ")
+        if timeZone != "UTC":
+            if timeZone == "AUTO":
+                timeZoneToConvertTo = tz.tzlocal()
+            else:
+                try:
+                    timeZoneToConvertTo = tz.gettz(timeZone)
+                except:
+                    pass
+            time = time.replace(tzinfo=tz.tzutc())
+            time = time.astimezone(timeZoneToConvertTo)
         value = float(i[1])
         if not math.isnan(value):
             if unit == "mm":
@@ -72,7 +101,14 @@ def get_forecast(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, forecas
 
     return dataDict
 
-def get_observation(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, apiTimeout: int = API_TIMEOUT_IN_SECS, observationTimeStep: int = OBSERVATION_TIME_STEP, observationLengthHours: int = OBSERVATION_LENGTH_HOURS, observationOverlapHours: int = OBSERVATION_OVERLAP_HOURS):
+def get_observation(fmisid: int = DEFAULT_FMISID,
+                    unit: str = DEFAULT_UNIT,
+                    apiTimeout: int = API_TIMEOUT_IN_SECS,
+                    observationTimeStep: int = OBSERVATION_TIME_STEP,
+                    observationLengthHours: int = OBSERVATION_LENGTH_HOURS,
+                    observationOverlapHours: int = OBSERVATION_OVERLAP_HOURS,
+                    timeZone: str = "UTC"):
+    
     timeNow = datetime.datetime.utcnow()
     endTime = timeNow + datetime.timedelta(hours=observationOverlapHours)
     startTime = timeNow - datetime.timedelta(hours=observationLengthHours)
@@ -110,6 +146,16 @@ def get_observation(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, apiT
     #Clean data and convert from mm to cm
     for i in rawSeaLevelObservationMW:
         time = datetime.datetime.strptime(i[0], "%Y-%m-%dT%H:%M:%SZ")
+        if timeZone != "UTC":
+            if timeZone == "AUTO":
+                timeZoneToConvertTo = tz.tzlocal()
+            else:
+                try:
+                    timeZoneToConvertTo = tz.gettz(timeZone)
+                except:
+                    pass
+            time = time.replace(tzinfo=tz.tzutc())
+            time = time.astimezone(timeZoneToConvertTo)
         value = float(i[1])
         if not math.isnan(value):
             if unit == "cm":
@@ -118,6 +164,16 @@ def get_observation(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, apiT
     
     for i in rawSeaLevelObservationN2000:
         time = datetime.datetime.strptime(i[0], "%Y-%m-%dT%H:%M:%SZ")
+        if timeZone != "UTC":
+            if timeZone == "AUTO":
+                timeZoneToConvertTo = tz.tzlocal()
+            else:
+                try:
+                    timeZoneToConvertTo = tz.gettz(timeZone)
+                except:
+                    pass
+            time = time.replace(tzinfo=tz.tzutc())
+            time = time.astimezone(timeZoneToConvertTo)
         value = float(i[1])
         if not math.isnan(value):
             if unit == "cm":
@@ -128,9 +184,19 @@ def get_observation(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, apiT
 
     return dataDict
 
-def get_sea_level_data(fmisid: int = DEFAULT_FMISID, unit: str = DEFAULT_UNIT, apiTimeout: int = API_TIMEOUT_IN_SECS, observationTimeStep: int = OBSERVATION_TIME_STEP, observationLengthHours: int = OBSERVATION_LENGTH_HOURS, observationOverlapHours: int = OBSERVATION_OVERLAP_HOURS, forecastTimeStep: int = FORECAST_TIME_STEP, forecastLengthHours: int = FORECAST_LENGTH_HOURS, forecastOverlapHours: int = FORECAST_OVERLAP_HOURS):
-    observations = get_observation(fmisid, unit, apiTimeout, observationTimeStep, observationLengthHours, observationOverlapHours)
-    forecasts = get_forecast(fmisid, unit, forecastOverlapHours, apiTimeout, forecastTimeStep, forecastLengthHours)
+def get_sea_level_data(fmisid: int = DEFAULT_FMISID,
+                       unit: str = DEFAULT_UNIT,
+                       apiTimeout: int = API_TIMEOUT_IN_SECS,
+                       observationTimeStep: int = OBSERVATION_TIME_STEP,
+                       observationLengthHours: int = OBSERVATION_LENGTH_HOURS,
+                       observationOverlapHours: int = OBSERVATION_OVERLAP_HOURS,
+                       forecastTimeStep: int = FORECAST_TIME_STEP,
+                       forecastLengthHours: int = FORECAST_LENGTH_HOURS,
+                       forecastOverlapHours: int = FORECAST_OVERLAP_HOURS,
+                       timeZone: str = "UTC"):
+    
+    observations = get_observation(fmisid, unit, apiTimeout, observationTimeStep, observationLengthHours, observationOverlapHours, timeZone)
+    forecasts = get_forecast(fmisid, unit, forecastOverlapHours, apiTimeout, forecastTimeStep, forecastLengthHours, timeZone)
     seaLevelData = {"Forecasts": forecasts, "Observations": observations, "CurrentMW": observations["SeaLevelMW"][-1], "CurrentN2000": observations["SeaLevelN2000"][-1]}
     return seaLevelData
 
